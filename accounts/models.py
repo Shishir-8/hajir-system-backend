@@ -3,20 +3,15 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, Permis
 
 # Create your models here.
 
-# if i don't write this line then i can't create super_user and user if i remove username = None
 
 class CustomUserManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_fields):
         if not email:
             raise ValueError('The Email field must be set')
         
-        # Normalize the email (convert domain to lowercase)
         email = self.normalize_email(email)
         
-        # Create the user instance
         user = self.model(email=email, **extra_fields)
-        
-        # Hash the password (never store plain text passwords!)
         user.set_password(password)
         user.save(using=self._db)
         return user
