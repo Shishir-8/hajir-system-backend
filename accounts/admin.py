@@ -22,7 +22,6 @@ class CustomUserAdmin(UserAdmin):
             'fields': ('email', 'password1', 'password2', 'first_name', 'last_name', 'role','is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions'),
         }),
     )
-    # useradmin needs ordering because we remove username and use email
     
 
 
