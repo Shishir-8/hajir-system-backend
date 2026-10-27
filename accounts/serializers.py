@@ -90,7 +90,7 @@ class ChangePasswordSerializer(serializers.Serializer):
         try:
             user_id = force_str(urlsafe_base64_decode(uid))
             user = User.objects.get(pk=user_id)
-        except:
+        except (TypeError, ValueError, OverflowError, User.DoesNotExist):
             raise serializers.ValidationError({"uid": "Invalid token or user ID"})
 
         token_generator = PasswordResetTokenGenerator()

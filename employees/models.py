@@ -31,7 +31,7 @@ class Employee(models.Model):
     department = models.CharField(max_length=50, choices=DepartmentChoices.choices)
     designation = models.CharField(max_length=100, choices=DesignationChoices.choices)
     phone_number = models.CharField(max_length=15, blank=True)
-    date_of_joining = models.DateTimeField()
+    date_of_joining = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"{self.user.first_name} - {self.user.email}"

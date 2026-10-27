@@ -8,6 +8,8 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.utils.http import urlsafe_base64_encode
 from django.utils.encoding import force_bytes
+from django.core.mail import send_mail
+from django.conf import settings
 
 User = get_user_model()
 
@@ -46,10 +48,29 @@ class PasswordResetRequestView(APIView):
             token = token_generator.make_token(user)
             uid = urlsafe_base64_encode(force_bytes(user.pk))
 
+            reset_url = f"https://yourfrontend.com/reset-password?uid={uid}&token={token}"
+
+            subject = "Password Reset Request"
+            message = (
+                f"Hello {user.first_name},\n\n"
+                f"You requested a password reset for your account. "
+                f"Please click the link below to set a new password:\n\n"
+                f"{reset_url}\n\n"
+                f"If you did not request this, please ignore this email.\n"
+                f"The link will expire shortly."
+            )
+
+            send_mail(
+                subject=subject,
+                message=message,
+                from_email=None,
+                recipient_list=[email],
+                fail_silently= False,
+                using="default"
+            )
+
             return Response({
                 "message": "If an account exists for that email, a password-reset link will be sent.",
-                "uid": uid,
-                "token": token
             }, status=status.HTTP_200_OK)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
