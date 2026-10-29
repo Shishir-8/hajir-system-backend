@@ -21,11 +21,14 @@ class CustomUserManager(BaseUserManager):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
         extra_fields.setdefault('is_active', True)
+        extra_fields.setdefault('role', 'ADMIN')
 
         if extra_fields.get('is_staff') is not True:
             raise ValueError('Superuser must have is_staff=True.')
         if extra_fields.get('is_superuser') is not True:
             raise ValueError('Superuser must have is_superuser=True.')
+        if extra_fields.get('role') != "ADMIN":
+            raise ValueError("Superuser must have role Admin")
 
         return self.create_user(email, password, **extra_fields)
 
@@ -48,12 +51,10 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_staff = models.BooleanField(default=False)   # Can access Django Admin?
     date_joined = models.DateTimeField(auto_now_add=True)
 
-    # Link the manager we wrote above
+
     objects = CustomUserManager()
 
-    # 1. What field does the user type in to log in?
     USERNAME_FIELD = 'email' 
-    # 2. What fields are requested when running `python manage.py createsuperuser`?
     REQUIRED_FIELDS = []
 
     def __str__(self):
