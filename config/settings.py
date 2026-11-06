@@ -1,6 +1,8 @@
 from pathlib import Path
 from datetime import timedelta
 import os
+from dotenv import load_dotenv
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -25,9 +27,12 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
+    'django_filters',
     'accounts',
     'employees',
+    'departments',
 
 ]
 
@@ -44,7 +49,6 @@ MIDDLEWARE = [
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
-    "http://127.0.0.1:3000",
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -81,6 +85,8 @@ DATABASES = {
 # Password validation
 # https://docs.djangoproject.com/en/6.1/ref/settings/#auth-password-validators
 
+PASSWORD_RESET_TIMEOUT = 60 * 60
+
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -114,30 +120,35 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
-
 # Email
 # https://docs.djangoproject.com/en/6.1/topics/email/#topic-email-configuration
 
-MAILERS = {
-    'default': {
-        'BACKEND': 'django.core.mail.backends.smtp.EmailBackend',
-        "OPTIONS": {
-            "host": "smtp.gmail.com",
-            "port": 587,
-            "use_tls": True,
-            "username": os.environ.get('EMAIL_HOST_USER'),
-            "password": os.environ.get('EMAIL_HOST_PASSWORD'),
-        }
-    },
-}
+# MAILERS = {
+#     'default': {
+#         'BACKEND': 'django.core.mail.backends.smtp.EmailBackend',
+#         "OPTIONS": {
+#             "host": "smtp.gmail.com",
+#             "port": 587,
+#             "use_tls": True,
+#             "username": os.getenv('EMAIL_HOST_USER'),
+#             "password": os.getenv('EMAIL_HOST_PASSWORD'),
+#         }
+#     },
+# }
 
-DEFAULT_MAILER = "default"
+# DEFAULT_MAILER = "default"
+# DEFAULT_FROM_EMAIL = os.getenv('EMAIL_HOST_USER')
 
-DEFAULT_FROM_EMAIL = os.getenv('EMAIL_HOST_USER')
+FRONTEND_URL = "http://localhost:3000"
 
+DEFAULT_FROM_EMAIL = "noreply@hajirsystem.com"
 
+EMAIL_BACKEND = (
+    "django.core.mail.backends.console.EmailBackend"
+)
 
 AUTH_USER_MODEL = 'accounts.User'
+
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
@@ -145,6 +156,9 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10,
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticated",
+    ],
     
 }
 
@@ -152,4 +166,5 @@ SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
     'AUTH_HEADER_TYPES': ('Bearer',),
+    'UPDATE_LAST_LOGIN': True
 }

@@ -2,36 +2,27 @@ from django.db import models
 from django.conf import settings
 
 # Create your models here.
+from django.conf import settings
+from django.db import models
 
-class DepartmentChoices(models.TextChoices):
-    IT = "IT", "Information Technology"
-    HR = "HR", "Human Resources"
-    FINANCE = "FINANCE", "Finance"
 
-class DesignationChoices(models.TextChoices):
-    CEO = "CEO", "Chief Executive Officer"
-    CTO = "CTO", "Chief Technology Officer"
-    MANAGER = "MANAGER", "Manager"
-    HR_MANAGER = "HR_MANAGER", "HR Manager"
-    ACCOUNTANT = "ACCOUNTANT", "Accountant"
-    SOFTWARE_DEVELOPER = "SOFTWARE_DEVELOPER", "Software Developer"
-    BACKEND_DEVELOPER = "BACKEND_DEVELOPER", "Backend Developer"
-    FRONTEND_DEVELOPER = "FRONTEND_DEVELOPER", "Frontend Developer"
-    UI_UX_DESIGNER = "UI_UX_DESIGNER", "UI/UX Designer"
-    QA_ENGINEER = "QA_ENGINEER", "QA Engineer"
-    SALES_EXECUTIVE = "SALES_EXECUTIVE", "Sales Executive"
-    MARKETING_EXECUTIVE = "MARKETING_EXECUTIVE", "Marketing Executive"
-    SUPPORT_EXECUTIVE = "SUPPORT_EXECUTIVE", "Support Executive"
-    INTERN = "INTERN", "Intern"
-    OTHER = "OTHER", "Other"
+class EmploymentStatus(models.TextChoices):
+    ACTIVE = "ACTIVE", "Active"
+    INACTIVE = "INACTIVE", "Inactive"
+    TERMINATED = "TERMINATED", "Terminated"
 
 
 class Employee(models.Model):
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    department = models.CharField(max_length=50, choices=DepartmentChoices.choices)
-    designation = models.CharField(max_length=100, choices=DesignationChoices.choices)
-    phone_number = models.CharField(max_length=15, blank=True)
-    date_of_joining = models.DateTimeField(auto_now_add=True)
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="employee_profile")
+    phone_number = models.CharField(max_length=20, blank=True)
+    address = models.TextField(blank=True)
+    department = models.ForeignKey("departments.Department", on_delete=models.SET_NULL, null=True, blank=True, related_name='employees')
+    designation = models.CharField(max_length=200)
+    joining_date = models.DateField()
+    employment_status = models.CharField(max_length=20, choices=EmploymentStatus.choices, default=EmploymentStatus.ACTIVE)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"{self.user.first_name} - {self.user.email}"
+        return self.user.first_name or self.user.email
