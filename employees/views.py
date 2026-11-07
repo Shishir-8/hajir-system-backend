@@ -4,13 +4,10 @@ from rest_framework.generics import (
 )
 from rest_framework.response import Response
 from rest_framework import status
-
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
-
 from .models import Employee
 from .serializers import EmployeeSerializer
-
 from accounts.permissions import IsAdmin, IsAdminOrManager
 
 

@@ -78,9 +78,7 @@ class EmployeeSerializer(serializers.ModelSerializer):
 
     @transaction.atomic
     def create(self, validated_data):
-
         user_data = validated_data.pop("user")
-
         password = validated_data.pop("password", None)
 
         if not password:
@@ -112,12 +110,9 @@ class EmployeeSerializer(serializers.ModelSerializer):
 
     @transaction.atomic
     def update(self, instance, validated_data):
-
         user_data = validated_data.pop("user", {})
-
         # Ignore password during profile updates
         validated_data.pop("password", None)
-
         user = instance.user
 
         for attr, value in user_data.items():
