@@ -10,27 +10,12 @@ from .models import Employee
 User = get_user_model()
 
 
-class UserDetailSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = [
-            "id",
-            "first_name",
-            "last_name",
-            "email",
-            "role",
-        ]
-
 class EmployeeSerializer(serializers.ModelSerializer):
-    # Display user information in GET responses
-    user = UserDetailSerializer(read_only=True)
-    
-    # Accept user information during creation and update
-    email = serializers.EmailField(write_only=True)
-    first_name = serializers.CharField(write_only=True)
-    last_name = serializers.CharField(write_only=True)
 
-    # Password is required during creation only
+    # Access User fields using source
+    email = serializers.EmailField(source="user.email")
+    first_name = serializers.CharField(source="user.first_name")
+    last_name = serializers.CharField(source="user.last_name")
     password = serializers.CharField(
         write_only=True,
         required=False,
@@ -38,14 +23,13 @@ class EmployeeSerializer(serializers.ModelSerializer):
         trim_whitespace=False,
         validators=[validate_password],
     )
-
-    # Admin can create EMPLOYEE or MANAGER
     role = serializers.ChoiceField(
+        source="user.role",
         choices=["EMPLOYEE", "MANAGER"],
         write_only=True,
+        required=False,
     )
 
-    # Accept Department primary key
     department = serializers.PrimaryKeyRelatedField(
         queryset=Department.objects.filter(is_active=True),
         required=False,
@@ -56,10 +40,9 @@ class EmployeeSerializer(serializers.ModelSerializer):
         model = Employee
         fields = [
             "id",
-            "user",
+            "email",
             "first_name",
             "last_name",
-            "email",
             "password",
             "role",
             "department",
@@ -74,7 +57,6 @@ class EmployeeSerializer(serializers.ModelSerializer):
 
         read_only_fields = [
             "id",
-            "user",
             "created_at",
             "updated_at",
         ]
@@ -85,7 +67,7 @@ class EmployeeSerializer(serializers.ModelSerializer):
         users = User.objects.filter(email__iexact=email)
 
         if self.instance:
-            users = users.exclude(id=self.instance.user_id)
+            users = users.exclude(pk=self.instance.user_id)
 
         if users.exists():
             raise serializers.ValidationError(
@@ -97,6 +79,8 @@ class EmployeeSerializer(serializers.ModelSerializer):
     @transaction.atomic
     def create(self, validated_data):
 
+        user_data = validated_data.pop("user")
+
         password = validated_data.pop("password", None)
 
         if not password:
@@ -104,21 +88,21 @@ class EmployeeSerializer(serializers.ModelSerializer):
                 "password": "Password is required."
             })
 
-        email = validated_data.pop("email")
-        first_name = validated_data.pop("first_name")
-        last_name = validated_data.pop("last_name")
-        role = validated_data.pop("role")
+        role = user_data.pop("role", None)
 
-        # Create User account
+        if not role:
+            raise serializers.ValidationError({
+                "role": "Role is required."
+            })
+
         user = User.objects.create_user(
-            email=email,
-            first_name=first_name,
-            last_name=last_name,
+            email=user_data["email"],
+            first_name=user_data["first_name"],
+            last_name=user_data["last_name"],
             password=password,
             role=role,
         )
 
-        # Create Employee profile
         employee = Employee.objects.create(
             user=user,
             **validated_data,
@@ -129,31 +113,17 @@ class EmployeeSerializer(serializers.ModelSerializer):
     @transaction.atomic
     def update(self, instance, validated_data):
 
-        email = validated_data.pop("email", None)
-        first_name = validated_data.pop("first_name", None)
-        last_name = validated_data.pop("last_name", None)
-        role = validated_data.pop("role", None)
+        user_data = validated_data.pop("user", {})
+
+        # Ignore password during profile updates
+        validated_data.pop("password", None)
 
         user = instance.user
 
-        if email is not None:
-            user.email = email
+        for attr, value in user_data.items():
+            setattr(user, attr, value)
 
-        if first_name is not None:
-            user.first_name = first_name
+        if user_data:
+            user.save()
 
-        if last_name is not None:
-            user.last_name = last_name
-
-        if role is not None:
-            user.role = role
-
-        user.save()
-
-        # Update Employee fields
-        for attr, value in validated_data.items():
-            setattr(instance, attr, value)
-
-        instance.save()
-
-        return instance
+        return super().update(instance, validated_data)

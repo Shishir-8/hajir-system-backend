@@ -15,7 +15,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(unique=True, max_length=255, db_index=True)
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
-    role = models.CharField(choices=RoleChoices.choices, default=RoleChoices.EMPLOYEE)
+    role = models.CharField(max_length=20, choices=RoleChoices.choices, default=RoleChoices.EMPLOYEE)
     
     # Required Django permission & status flags
     is_active = models.BooleanField(default=True)
