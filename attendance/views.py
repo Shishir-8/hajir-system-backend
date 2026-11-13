@@ -132,6 +132,7 @@ class CheckOutView(APIView):
         }, status=status.HTTP_200_OK)
 
 
+
 class MyAttendanceView(APIView):
     permission_classes = [IsAuthenticated]
 
