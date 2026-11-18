@@ -124,29 +124,24 @@ STATIC_URL = 'static/'
 # Email
 # https://docs.djangoproject.com/en/6.1/topics/email/#topic-email-configuration
 
-# MAILERS = {
-#     'default': {
-#         'BACKEND': 'django.core.mail.backends.smtp.EmailBackend',
-#         "OPTIONS": {
-#             "host": "smtp.gmail.com",
-#             "port": 587,
-#             "use_tls": True,
-#             "username": os.getenv('EMAIL_HOST_USER'),
-#             "password": os.getenv('EMAIL_HOST_PASSWORD'),
-#         }
-#     },
-# }
+MAILERS = {
+    'default': {
+        'BACKEND': 'django.core.mail.backends.smtp.EmailBackend',
+        "OPTIONS": {
+            "host": "smtp.gmail.com",
+            "port": 587,
+            "use_tls": True,
+            "username": os.getenv('GMAIL_HOST_USER'),
+            "password": os.getenv('GMAIL_HOST_PASSWORD'),
+        }
+    },
+}
 
-# DEFAULT_MAILER = "default"
-# DEFAULT_FROM_EMAIL = os.getenv('EMAIL_HOST_USER')
+DEFAULT_MAILER = "default"
+DEFAULT_FROM_EMAIL = os.getenv('GMAIL_HOST_USER')
 
 FRONTEND_URL = "http://localhost:3000"
 
-DEFAULT_FROM_EMAIL = "noreply@hajirsystem.com"
-
-EMAIL_BACKEND = (
-    "django.core.mail.backends.console.EmailBackend"
-)
 
 AUTH_USER_MODEL = 'accounts.User'
 
@@ -155,8 +150,7 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 10,
+    'DEFAULT_PAGINATION_CLASS': 'config.pagination.CustomPagination',
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated",
     ],

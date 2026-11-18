@@ -1,23 +1,29 @@
+
 from rest_framework.generics import (
     ListCreateAPIView,
     RetrieveUpdateDestroyAPIView,
 )
 from rest_framework.response import Response
 from rest_framework import status
+
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
+
 from .models import Employee
 from .serializers import EmployeeSerializer
 from accounts.permissions import IsAdmin, IsAdminOrManager
+from config.pagination import CustomPagination
 
 
-# List and Create Employees
 class EmployeeListCreateView(ListCreateAPIView):
+
     queryset = Employee.objects.select_related(
         "user",
         "department",
     )
+
     serializer_class = EmployeeSerializer
+    pagination_class = CustomPagination
 
     filter_backends = [
         DjangoFilterBackend,
@@ -62,16 +68,17 @@ class EmployeeListCreateView(ListCreateAPIView):
         )
 
 
-# Retrieve, Update and Delete Employee
 class EmployeeDetailView(RetrieveUpdateDestroyAPIView):
+    
     queryset = Employee.objects.select_related(
         "user",
         "department",
     )
+
     serializer_class = EmployeeSerializer
 
     def get_permissions(self):
-        if self.request.method in ["PUT", "PATCH", "DELETE"]:
+        if self.request.method == "DELETE":
             permission_classes = [IsAdmin]
         else:
             permission_classes = [IsAdminOrManager]

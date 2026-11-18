@@ -1,21 +1,24 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 from django.db import transaction
-
 from rest_framework import serializers
-
 from departments.models import Department
 from .models import Employee
+from accounts.utils import assign_user_group
+
+
 
 User = get_user_model()
+
+ROLE_GROUPS = ["ADMIN", "MANAGER", "EMPLOYEE"]
 
 
 class EmployeeSerializer(serializers.ModelSerializer):
 
-    # Access User fields using source
     email = serializers.EmailField(source="user.email")
     first_name = serializers.CharField(source="user.first_name")
     last_name = serializers.CharField(source="user.last_name")
+
     password = serializers.CharField(
         write_only=True,
         required=False,
@@ -23,18 +26,20 @@ class EmployeeSerializer(serializers.ModelSerializer):
         trim_whitespace=False,
         validators=[validate_password],
     )
+
     role = serializers.ChoiceField(
         source="user.role",
         choices=["EMPLOYEE", "MANAGER"],
-        write_only=True,
         required=False,
     )
 
-    department = serializers.PrimaryKeyRelatedField(
+    department = serializers.SlugRelatedField(
+        slug_field="name",
         queryset=Department.objects.filter(is_active=True),
         required=False,
         allow_null=True,
     )
+
 
     class Meta:
         model = Employee
@@ -55,11 +60,7 @@ class EmployeeSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
 
-        read_only_fields = [
-            "id",
-            "created_at",
-            "updated_at",
-        ]
+        read_only_fields = ["id", "created_at", "updated_at"]
 
     def validate_email(self, value):
         email = value.strip().lower()
@@ -78,6 +79,7 @@ class EmployeeSerializer(serializers.ModelSerializer):
 
     @transaction.atomic
     def create(self, validated_data):
+
         user_data = validated_data.pop("user")
         password = validated_data.pop("password", None)
 
@@ -101,18 +103,23 @@ class EmployeeSerializer(serializers.ModelSerializer):
             role=role,
         )
 
+        assign_user_group(user)
+
         employee = Employee.objects.create(
             user=user,
-            **validated_data,
+            **validated_data
         )
 
         return employee
 
     @transaction.atomic
     def update(self, instance, validated_data):
+
         user_data = validated_data.pop("user", {})
-        # Ignore password during profile updates
+
+        # Password changes are handled by the separate change-password API.
         validated_data.pop("password", None)
+
         user = instance.user
 
         for attr, value in user_data.items():
@@ -120,5 +127,11 @@ class EmployeeSerializer(serializers.ModelSerializer):
 
         if user_data:
             user.save()
+
+        # Synchronize the group only when a role is supplied.
+        role = user_data.get("role")
+
+        if role:
+            assign_user_group(user)
 
         return super().update(instance, validated_data)

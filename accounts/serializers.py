@@ -9,36 +9,6 @@ from django.conf import settings
 
 User = get_user_model()
 
-# register serializer
-class RegisterSerializer(serializers.ModelSerializer):
-
-    password = serializers.CharField(write_only=True)
-    confirm_password = serializers.CharField(write_only=True)
-
-    class Meta:
-        model = User
-        fields = ['id', 'first_name', 'last_name', 'email', 'password', 'confirm_password']
-        read_only_fields = ['id']
-
-    def validate_email(self, value):
-        if User.objects.filter(email__iexact=value).exists():
-            raise serializers.ValidationError( "A user with this email already exists")
-        return value
-
-    def validate(self, data):
-        if data['password'] != data['confirm_password']:
-            raise serializers.ValidationError({
-                "confirm_password": "Passwords do not match"
-            })
-        return data
-
-    def create(self, validated_data):
-        validated_data.pop('confirm_password', None)
-        password = validated_data.pop('password', None)
-        user = User.objects.create_user(password=password, role="EMPLOYEE", **validated_data)
-        return user
-
-
 # login serializer
 class CustomLoginSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
@@ -50,10 +20,12 @@ class CustomLoginSerializer(TokenObtainPairSerializer):
             "id": user.id,
             "first_name": user.first_name,
             "last_name": user.last_name,
+            "full_name": user.full_name,
             "email": user.email,
             "role": user.role
         }
-        data['permissions'] = list(user.get_all_permissions())
+        data['permissions'] = sorted(user.get_all_permissions())
+       
         return data
 
 
@@ -102,7 +74,7 @@ class ForgetPasswordSerializer(serializers.Serializer):
         token = default_token_generator.make_token(user)
         uid = urlsafe_base64_encode(force_bytes(user.pk))
 
-        reset_link = f"{settings.FRONTEND_URL}/auth/reset-password?uid={uid}&token={token}"
+        reset_link = f"{settings.FRONTEND_URL}/reset-password?uid={uid}&token={token}"
         send_mail(
             subject="Reset your password",
             message=(
