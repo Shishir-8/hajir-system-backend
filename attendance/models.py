@@ -3,6 +3,7 @@ from django.db.models import Q, F
 
 
 class AttendanceStatus(models.TextChoices):
+    IN_PROGRESS = "IN_PROGRESS", 'In Progress'
     PRESENT = "PRESENT", "Present"
     LATE = "LATE", "Late"
     ABSENT = "ABSENT", "Absent"
@@ -22,7 +23,7 @@ class Attendance(models.Model):
     working_duration = models.DurationField(null=True, blank=True)
     working_day_type = models.CharField(max_length=20, choices=WorkingDayType.choices, null=True, blank=True)
     late_minutes = models.PositiveIntegerField(default=0)
-    status = models.CharField(max_length=20, choices=AttendanceStatus.choices, default=AttendanceStatus.PRESENT)
+    status = models.CharField(max_length=20, choices=AttendanceStatus.choices, default=AttendanceStatus.IN_PROGRESS)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

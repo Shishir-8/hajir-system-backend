@@ -1,5 +1,5 @@
 from rest_framework_simplejwt.views import TokenObtainPairView
-from .serializers import CustomLoginSerializer, ChangePasswordSerializer, ForgetPasswordSerializer, ResetPasswordSerializer
+from .serializers import CustomLoginSerializer, ChangePasswordSerializer, ForgetPasswordSerializer, ResetPasswordSerializer, MyProfileSerializer
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -53,17 +53,9 @@ class LogoutView(APIView):
 class MyProfile(APIView):
     permission_classes = [IsAuthenticated]
     def get(self, request):
-        user = request.user
-        print("User is", user)
-        return Response({
-            'id': user.id,
-            'first_name': user.first_name,
-            'last_name': user.last_name,
-            'full_name': user.full_name,
-            'email': user.email,
-            'role': user.role
-        })
-    
+        serializer = MyProfileSerializer(request.user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+        
 
 class ForgetPasswordView(APIView):
     permission_classes = [AllowAny]

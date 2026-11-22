@@ -6,6 +6,8 @@ from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.conf import settings
+from employees.models import Employee
+
 
 User = get_user_model()
 
@@ -116,7 +118,55 @@ class ResetPasswordSerializer(serializers.Serializer):
         user.save()
         return user
 
-        
+
+class MyProfileSerializer(serializers.ModelSerializer):
+
+    phone_number = serializers.CharField(
+        source="employee_profile.phone_number",
+        read_only=True
+    )
+
+    address = serializers.CharField(
+        source="employee_profile.address",
+        read_only=True
+    )
+
+    designation = serializers.CharField(
+        source="employee_profile.designation",
+        read_only=True
+    )
+
+    joining_date = serializers.DateField(
+        source="employee_profile.joining_date",
+        read_only=True
+    )
+
+    employment_status = serializers.CharField(
+        source="employee_profile.employment_status",
+        read_only=True
+    )
+
+    department= serializers.CharField(
+        source="employee_profile.department.name",
+        read_only=True
+    )
+
+    class Meta:
+        model = User
+        fields = [
+            "id",
+            "email",
+            "first_name",
+            "last_name",
+            "full_name",
+            "role",
+            "phone_number",
+            "address",
+            "designation",
+            "department",
+            "joining_date",
+            "employment_status",
+        ]
 
 
 

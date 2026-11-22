@@ -33,7 +33,7 @@ class CheckInView(APIView):
 
         now = timezone.now()
         local_now = timezone.localtime()
-        today_date = timezone.localdate()
+        today_date = local_now.date()
 
         if Attendance.objects.filter(employee=employee, date=today_date).exists():
             return Response({'message':'You have already check in today'}, status=status.HTTP_400_BAD_REQUEST)
@@ -103,10 +103,9 @@ class CheckOutView(APIView):
         now = timezone.now()
         working_duration = now - attendance.check_in
         required_duration = timedelta(hours=float(settings.required_working_hours))
-        half_day_duration =  required_duration / 2
 
-        if working_duration >= half_day_duration:
-            working_day_type = WorkingDayType.FUll_DAY
+        if working_duration >= required_duration:
+            working_day_type = WorkingDayType.FULL_DAY
         else:
             working_day_type = WorkingDayType.HALF_DAY
 
@@ -127,7 +126,7 @@ class CheckOutView(APIView):
                 "check_out": attendance.check_out,
                 "working_duration": attendance.working_duration,
                 "status": attendance.status,
-                "working_day_type": attendance.working_day_type
+                "working_day_type": attendance.working_day_type,
             }
         }, status=status.HTTP_200_OK)
 
