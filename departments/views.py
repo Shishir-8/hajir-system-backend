@@ -5,11 +5,16 @@ from rest_framework.generics import (
 from .models import Department
 from .serializers import DepartmentSerializer
 from accounts.permissions import IsAdmin, IsAdminOrManager
+from rest_framework.filters import SearchFilter
+from rest_framework.permissions import AllowAny
 
 
 class DepartmentListCreateView(ListCreateAPIView):
     queryset = Department.objects.all()
     serializer_class = DepartmentSerializer
+
+    filter_backends =[SearchFilter]
+    search_fields = ['name']
 
     def get_permissions(self):
         if self.request.method == "POST":
